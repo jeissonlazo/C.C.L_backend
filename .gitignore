@@ -1,0 +1,15 @@
+# Build output
+bin/
+obj/
+.build-check/
+
+# Machine-specific configuration and secrets
+appsettings.Neon.json
+appsettings.Production.json
+appsettings.*.local.json
+
+# IDE and local tooling
+.vs/
+.vscode/
+*.user
+*.suo
