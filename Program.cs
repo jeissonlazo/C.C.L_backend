@@ -10,6 +10,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// El proveedor de Event Log de Windows solo escribe con privilegios elevados. Cuando falla,
+// .NET propaga la excepción del logger y cualquier petición termina en 500. Usamos consola.
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 var configuredConnectionString = builder.Configuration.GetConnectionString("Inventory")
     ?? throw new InvalidOperationException("Configura ConnectionStrings:Inventory.");
 var connectionString = PostgresConnectionString.Normalize(configuredConnectionString);

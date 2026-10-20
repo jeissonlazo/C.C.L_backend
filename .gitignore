@@ -4,7 +4,6 @@ obj/
 .build-check/
 
 # Machine-specific configuration and secrets
-appsettings.Neon.json
 appsettings.Production.json
 appsettings.*.local.json
 
