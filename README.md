@@ -128,6 +128,11 @@ Ejemplo de movimiento:
 
 El enumerado `type` viaja como texto (`Entry`/`Exit`) y las validaciones responden `ProblemDetails`. `DELETE /api/products/{id}` es una baja lógica (`is_active = false`).
 
+## Validación de requisitos
+
+[`docs/validacion-requisitos.md`](docs/validacion-requisitos.md) audita el backend contra los cuatro requisitos del proyecto (base PostgreSQL, API REST, EF Core, procedimientos almacenados), con la evidencia de código, de base de datos y de ejecución.
+
+
 ## Seguridad
 
 Las contraseñas se almacenan con `PasswordHasher` de ASP.NET Core Identity. Los JWT vencen en ocho horas y se firman con HMAC-SHA256.
