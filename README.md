@@ -1,49 +1,102 @@
-# BodegaFlow · Gestión de inventario
+# BodegaFlow · Gestión de inventario (API)
 
-Aplicación web adaptable con API REST en ASP.NET Core 10, Entity Framework Core y PostgreSQL. La interfaz está servida por la misma aplicación.
+Aplicación web adaptable con API REST en ASP.NET Core 10, Entity Framework Core y PostgreSQL. La interfaz Angular vive en el repositorio hermano `inventario-front-end` y consume esta API por `/api`.
 
 ## Requisitos
 
 - .NET SDK 10
-- Docker Desktop con Docker Compose para usar PostgreSQL localmente, o una base PostgreSQL accesible
+- Una base PostgreSQL: por defecto la de **Neon**, o el PostgreSQL local del equipo
 
-## Inicio rápido
+## Configuración local (una vez)
 
-1. `appsettings.json` apunta a un PostgreSQL local en `localhost:5432`, base `gestion_inventario` (usuario y contraseña `postgres`). Necesitas un servidor PostgreSQL escuchando en ese puerto: el servicio instalado en el equipo, o Docker con `docker compose up -d`, que crea la base y aplica `database/init.sql` la primera vez.
-2. Restaura dependencias e inicia la aplicación:
+`appsettings.json` **no se versiona**: guarda la cadena de conexión y el secreto JWT. El repositorio trae la plantilla `appsettings.example.json`:
 
-   ```powershell
-   dotnet restore
-   dotnet run
-   ```
+```powershell
+Copy-Item appsettings.example.json appsettings.json
+```
 
-3. Abre <http://localhost:5070>, crea la primera cuenta e inicia sesión.
+Después edita en `appsettings.json`:
 
-Para una base nueva, ejecuta `database/init.sql` una vez. Si cambias el esquema después de crear la base local, aplica el SQL actualizado o recrea el volumen de desarrollo con `docker compose down -v` (esto elimina sus datos).
-
-## Configuración
-
-### Usar Neon (perfil preparado)
-
-1. Coloca la URL completa de conexión PostgreSQL de Neon en `ConnectionStrings:Inventory` dentro de `appsettings.json` (o en la variable de entorno `ConnectionStrings__Inventory`). La aplicación acepta el formato `postgresql://...` de Neon y traduce sus opciones `sslmode` y `channel_binding`.
-2. Configura un secreto JWT propio de al menos 32 bytes. En PowerShell puedes generar uno con:
+1. `ConnectionStrings:Inventory` con la URL de Neon (o la cadena `Host=…` de tu PostgreSQL). Deja `ConnectionStrings:Local` si quieres alternar entre bases.
+2. `Jwt:Secret` con un valor aleatorio de al menos 32 bytes:
 
    ```powershell
    [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
    ```
 
-3. Ejecuta `database/init.sql` una vez desde el SQL Editor de Neon. También puedes ejecutarlo con `psql` usando la cadena de conexión de Neon.
-4. Inicia con el perfil Neon:
+Si falta cualquiera de los dos, la API no arranca y lo indica con un mensaje explícito.
 
-   ```powershell
-   dotnet run --launch-profile neon
-   ```
+## Inicio rápido
 
-5. Abre <http://localhost:5071/swagger> para ver y probar la API.
+```powershell
+dotnet restore
+dotnet run --launch-profile http     # http://localhost:5070
+```
 
-La cadena usa el host y la base indicados, TLS obligatorio y `Channel Binding=Require`. `appsettings.json` contiene credenciales de conexión; mantenlo fuera de commits públicos. Para desplegar la aplicación, inyecta los secretos mediante variables de entorno o un gestor de secretos en lugar de incluirlos en el archivo.
+Comprueba el estado en <http://localhost:5070/api/health> y la documentación interactiva en <http://localhost:5070/swagger>.
 
-En despliegues configura `ConnectionStrings__Inventory` y `Jwt__Secret` mediante variables de entorno o un gestor de secretos. Genera un secreto aleatorio de al menos 32 bytes; no uses la clave de ejemplo en producción. Configura `Cors__AllowedOrigins` con los orígenes del frontend si se publica por separado.
+La cadena activa es `ConnectionStrings:Inventory` (formato `postgresql://…` de Neon o `Host=…`). Para usar otra base sin tocar el archivo, sobrescríbela por entorno:
+
+```powershell
+$env:ConnectionStrings__Inventory = 'Host=localhost;Port=5432;Database=gestion_inventario;Username=postgres;Password=postgres'
+dotnet run --launch-profile http
+```
+
+## Base de datos
+
+El esquema está en `database/init.sql`: tablas `users`, `products` y `inventory_movements`, más las funciones `register_inventory_movement` (transacción + `FOR UPDATE`, evita saldos negativos) y `get_current_inventory` (existencias y valor por producto activo).
+
+Para una base nueva:
+
+```powershell
+psql "$env:ConnectionStrings__Inventory" -f database/init.sql
+psql "$env:ConnectionStrings__Inventory" -f database/seed-demo.sql   # catálogo de demostración, idempotente
+```
+
+`database/seed-demo.sql` incluye la cuenta `demo@bodegaflow.dev` / `BodegaFlow2026!` y cinco productos con movimientos, para que el frontend tenga datos al abrirlo. `database/seed-fix.sql` limpia datos de prueba de la UI y ajusta el mínimo de `TAS-004` para ver el aviso de bajo stock.
+
+### PostgreSQL local con Docker (opcional)
+
+`docker-compose.yml` levanta un PostgreSQL 17 y aplica `database/init.sql` la primera vez:
+
+```powershell
+docker compose up -d
+```
+
+Si cambias el esquema después de crear el volumen, aplica el SQL actualizado o recrea el volumen con `docker compose down -v` (esto elimina sus datos).
+
+## Configuración
+
+| Clave | Uso |
+| --- | --- |
+| `ConnectionStrings:Inventory` | Cadena activa. Admite `Host=…` o la URL `postgresql://…` de Neon (`sslmode`, `channel_binding`, `connect_timeout`, `application_name`). Se puede sobrescribir con la variable `ConnectionStrings__Inventory`. |
+| `ConnectionStrings:Local` | Cadena del PostgreSQL del equipo, como referencia para cambiar de base. |
+| `Jwt:Secret` | Secreto HMAC de al menos 32 bytes. En despliegues usa `Jwt__Secret`. |
+| `Jwt:Issuer` / `Jwt:Audience` | Emisor y audiencia que se validan en cada token. |
+| `Cors:AllowedOrigins` | Orígenes permitidos: `5070`, `7191`, `4200` y `127.0.0.1:4200`. |
+
+### Archivos de configuración
+
+| Archivo | ¿Versionado? | Contenido |
+| --- | --- | --- |
+| `appsettings.json` | No (`.gitignore`) | Configuración de la máquina: cadena de conexión y secreto JWT. Se crea copiando el ejemplo. |
+| `appsettings.example.json` | Sí | Plantilla con los valores vacíos o de relleno. |
+| `appsettings.Development.json` | Sí | Solo niveles de log; no tiene secretos. |
+| `appsettings.Production.json`, `appsettings.*.local.json` | No (`.gitignore`) | Ajustes locales o de despliegue.
+
+Al clonar el repositorio hay que ejecutar `Copy-Item appsettings.example.json appsettings.json` y rellenar `ConnectionStrings:Inventory` y `Jwt:Secret`. Si además prefieres no escribir secretos en disco, configura `ConnectionStrings__Inventory` y `Jwt__Secret` como variables de entorno y deja la plantilla tal cual (el valor de entorno tiene prioridad).
+
+El frontend se sirve con `ng serve` en el puerto `4200` y su `proxy.conf.json` reenvía `/api` a `http://localhost:5070`, así que en desarrollo no hay CORS de por medio. La lista de orígenes queda como respaldo para llamadas directas.
+
+## Perfiles de arranque
+
+| Perfil | Comando | URL |
+| --- | --- | --- |
+| `http` | `dotnet run --launch-profile http` | <http://localhost:5070> |
+| `https` | `dotnet run --launch-profile https` | <https://localhost:7191> y <http://localhost:5070> |
+| `neon` | `dotnet run --launch-profile neon` | <http://localhost:5071> (entorno `Neon`, Swagger activo) |
+
+Swagger se publica en desarrollo y en el entorno `Neon`.
 
 ## API
 
@@ -54,6 +107,7 @@ Todos los endpoints salvo salud y autenticación requieren `Authorization: Beare
 | GET | `/api/health` | Estado del servicio |
 | POST | `/api/auth/register` | Crear cuenta (`email`, `password`) |
 | POST | `/api/auth/login` | Obtener token JWT |
+| GET | `/api/auth/me` | Correo del token actual |
 | GET | `/api/dashboard` | Resumen y alertas de stock |
 | GET, POST | `/api/products` | Consultar y crear productos |
 | PUT, DELETE | `/api/products/{id}` | Editar o desactivar producto |
@@ -72,8 +126,13 @@ Ejemplo de movimiento:
 }
 ```
 
-Las funciones PostgreSQL `register_inventory_movement` y `get_current_inventory` aplican y consultan el stock. La primera bloquea el producto al validar una salida y guardar el movimiento, evitando saldos negativos por operaciones simultáneas. Swagger UI está disponible en desarrollo en `/swagger` e incluye autenticación Bearer para probar los endpoints protegidos.
+El enumerado `type` viaja como texto (`Entry`/`Exit`) y las validaciones responden `ProblemDetails`. `DELETE /api/products/{id}` es una baja lógica (`is_active = false`).
 
 ## Seguridad
 
-Las contraseñas se almacenan con `PasswordHasher` de ASP.NET Core Identity. Los JWT vencen en ocho horas y se firman con HMAC-SHA256. El registro público crea cuentas para una instalación nueva; protege el alta de usuarios en despliegues públicos según la política de tu organización.
+Las contraseñas se almacenan con `PasswordHasher` de ASP.NET Core Identity. Los JWT vencen en ocho horas y se firman con HMAC-SHA256.
+
+`appsettings.json` ya no se versiona (quedó en `.gitignore`) y solo se conserva la plantilla `appsettings.example.json`. Ojo con el historial: versiones anteriores del archivo incluían un secreto JWT de ejemplo, así que **rota** `Jwt:Secret` (y cualquier credencial que haya estado en un commit) y no lo reutilices en despliegues. En producción, configura `ConnectionStrings__Inventory` y `Jwt__Secret` como variables de entorno o desde un gestor de secretos.
+
+El registro público (`POST /api/auth/register`) crea cuentas sin restricción; protégelo o desactívalo en despliegues públicos según la política de tu organización.
+

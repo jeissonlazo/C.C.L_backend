@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\projectos\\gestion_inventario\\gestion_inventario.csproj": {}
+    "D:\\projectos\\bodegapp\\gestion_inventario\\gestion_inventario.csproj": {}
   },
   "projects": {
-    "D:\\projectos\\gestion_inventario\\gestion_inventario.csproj": {
+    "D:\\projectos\\bodegapp\\gestion_inventario\\gestion_inventario.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\projectos\\gestion_inventario\\gestion_inventario.csproj",
+        "projectUniqueName": "D:\\projectos\\bodegapp\\gestion_inventario\\gestion_inventario.csproj",
         "projectName": "gestion_inventario",
-        "projectPath": "D:\\projectos\\gestion_inventario\\gestion_inventario.csproj",
+        "projectPath": "D:\\projectos\\bodegapp\\gestion_inventario\\gestion_inventario.csproj",
         "packagesPath": "C:\\Users\\jeiss\\.nuget\\packages\\",
-        "outputPath": "D:\\projectos\\gestion_inventario\\obj\\",
+        "outputPath": "D:\\projectos\\bodegapp\\gestion_inventario\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

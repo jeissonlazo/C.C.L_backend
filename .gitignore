@@ -4,6 +4,9 @@ obj/
 .build-check/
 
 # Machine-specific configuration and secrets
+# La configuración real no se versiona: parte de appsettings.example.json.
+# (Si el archivo ya estaba en el índice: git rm --cached appsettings.json)
+appsettings.json
 appsettings.Production.json
 appsettings.*.local.json
 

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "vOdLUvEehQ0=",
+  "dgSpecHash": "WJzu3vvfhN8=",
   "success": true,
-  "projectFilePath": "D:\\projectos\\gestion_inventario\\gestion_inventario.csproj",
+  "projectFilePath": "D:\\projectos\\bodegapp\\gestion_inventario\\gestion_inventario.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\jeiss\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.10\\microsoft.aspnetcore.authentication.jwtbearer.10.0.10.nupkg.sha512",
     "C:\\Users\\jeiss\\.nuget\\packages\\microsoft.bcl.cryptography\\10.0.2\\microsoft.bcl.cryptography.10.0.2.nupkg.sha512",
