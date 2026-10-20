@@ -9,7 +9,7 @@ Aplicación web adaptable con API REST en ASP.NET Core 10, Entity Framework Core
 
 ## Inicio rápido
 
-1. `appsettings.json` está configurado para Neon y el esquema ya está aplicado. Para usar PostgreSQL local, inicia Docker con `docker compose up -d` y cambia `ConnectionStrings:Inventory` en `appsettings.json` a la conexión local.
+1. `appsettings.json` apunta a un PostgreSQL local en `localhost:5432`, base `gestion_inventario` (usuario y contraseña `postgres`). Necesitas un servidor PostgreSQL escuchando en ese puerto: el servicio instalado en el equipo, o Docker con `docker compose up -d`, que crea la base y aplica `database/init.sql` la primera vez.
 2. Restaura dependencias e inicia la aplicación:
 
    ```powershell
@@ -25,7 +25,7 @@ Para una base nueva, ejecuta `database/init.sql` una vez. Si cambias el esquema 
 
 ### Usar Neon (perfil preparado)
 
-1. La URL completa de conexión PostgreSQL de Neon está en `ConnectionStrings:Inventory` dentro de `appsettings.json`. La aplicación acepta el formato `postgresql://...` de Neon y traduce sus opciones `sslmode` y `channel_binding`.
+1. Coloca la URL completa de conexión PostgreSQL de Neon en `ConnectionStrings:Inventory` dentro de `appsettings.json` (o en la variable de entorno `ConnectionStrings__Inventory`). La aplicación acepta el formato `postgresql://...` de Neon y traduce sus opciones `sslmode` y `channel_binding`.
 2. Configura un secreto JWT propio de al menos 32 bytes. En PowerShell puedes generar uno con:
 
    ```powershell
